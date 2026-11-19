@@ -1,34 +1,39 @@
 import math
 
 class IsLowOnStock(Exception):
+    """Raised when the requested quantity exceeds the available stock."""
     pass
 
 class IsNotAvailable(ValueError):
+    """Raised when trying to buy an inactive product."""
     pass
 
-
 class NameIsInvalid(ValueError):
+    """Raised when a Value not meet the name requirements."""
     pass
 
 class NameTypeIsInvalid(TypeError):
+    """Raised when a Type is not valid."""
     pass
 
-
 class PriceIsInvalid(ValueError):
+    """Raised when a Value not meet the name requirements."""
     pass
 
 class PriceTypeIsInvalid(TypeError):
+    """Raised when a Type is not valid."""
     pass
 
-
 class QuantityIsInvalid(ValueError):
+    """Raised when a Value not meet the name requirements."""
     pass
 
 class QuantityTypeIsInvalid(TypeError):
+    """Raised when a Type is not valid."""
     pass
 
-
 class Product:
+    """A product in the store with name, price, quantity and active status."""
     MAX_NAME_LENGTH = 50
     MIN_NAME_LENGTH = 3
 
@@ -38,10 +43,20 @@ class Product:
         self.active = True
         self.set_quantity(quantity)
 
+    def __repr__(self):
+        """Return a readable representation of the product."""
+        return f'name={self.name}, price={self.price}, quantity={self.quantity}, active={self.active}'
+
+    def __eq__(self, other):
+        """Compare name (case-insensitive) and price for equality, ignoring quantity and active status."""
+        return self.name.lower() == other.name.lower() and self.price == other.price
+
     def get_name(self):
+        """Return the product name."""
         return self.name
 
     def set_name(self, name):
+        """Set the product name after validation."""
         if self.is_name_valid(name):
             self.name = name
             return True
@@ -49,6 +64,7 @@ class Product:
             return False
 
     def is_name_valid(self, name):
+        """Check the name; raise NameTypeIsInvalid or NameIsInvalid if invalid."""
         requirements = f"""
 
                     Product Name Requirements:
@@ -72,9 +88,11 @@ class Product:
         return True
 
     def get_price(self):
+        """Return the product price."""
         return self.price
 
     def set_price(self, price):
+        """Set the price after validation; ints are converted to float."""
         if self.is_price_valid(price):
             price = float(price)
             self.price = price
@@ -83,6 +101,7 @@ class Product:
             return False
 
     def is_price_valid(self, price):
+        """Check the price; raise PriceTypeIsInvalid or PriceIsInvalid if invalid."""
         requirements = f"""
 
                             Product Price Requirements:
@@ -99,13 +118,15 @@ class Product:
             raise PriceIsInvalid(F'Price cannot be NaN or Infinity, "{price}" is rejected')
 
         if not price >= 0:
-            raise PriceIsInvalid(f'Product price must be >= 0,  "{price}" is rejected' + requirements)
+            raise PriceIsInvalid(f'Product price must be >= 0, "{price}" is rejected' + requirements)
         return True
 
     def get_quantity(self):
+        """Return the current stock quantity."""
         return self.quantity
 
     def set_quantity(self, quantity):
+        """Set the quantity after validation; deactivate the product at 0."""
         if self.is_quantity_valid(quantity):
             self.quantity = int(round(quantity))
             if self.quantity == 0:
@@ -114,8 +135,8 @@ class Product:
         else:
             return False
 
-
     def reduce_quantity(self, quantity):
+        """Reduce the stock by quantity; return False if not enough is in stock."""
         if self.get_quantity() >= quantity:
             new_quantity = self.get_quantity() - quantity
             self.set_quantity(new_quantity)
@@ -124,6 +145,7 @@ class Product:
             return False
 
     def is_quantity_valid(self, quantity):
+        """Check the quantity; raise QuantityTypeIsInvalid or QuantityIsInvalid if invalid."""
         requirements = f"""
 
                             Product Quantity Requirements:
@@ -138,44 +160,45 @@ class Product:
             raise QuantityIsInvalid(F'Quantity cannot be NaN or Infinity, "{quantity}" is rejected')
 
         if quantity < 0:
-            raise QuantityIsInvalid(f'Product quantity must be >= 0,  "{quantity}" is rejected' + requirements)
+            raise QuantityIsInvalid(f'Product quantity must be >= 0, "{quantity}" is rejected' + requirements)
         return True
 
-
-
     def is_active(self):
+        """Return True if the product is available for purchase."""
         return self.active
 
     def activate(self):
+        """Mark the product as available."""
         self.active = True
         return self.active
 
     def deactivate(self):
+        """Mark the product as unavailable."""
         self.active = False
         return self.active
 
     def show(self):
-        print(f'{self.name} costs {self.price} there are {self.quantity} units in stock, and it is currently {"available" if self.active else "unavailable"}')
+        """Return a description of the product as a string."""
+        product_show = f'{self.name} costs {self.price} there are {self.quantity} units in stock, and it is currently {"available" if self.active else "unavailable"}'
+        if __name__ == "__main__":
+            print(product_show)
+        return product_show
 
     def buy(self, quantity):
-        if self.is_active():
-            if self.is_quantity_valid(quantity):
-                quantity = int(round(quantity))
-                cost = float(quantity * self.get_price())
-                if self.reduce_quantity(quantity):
-                    return cost
-                else:
-                    raise IsLowOnStock(f'{quantity} units of {self.name} costs {cost} there are only {self.quantity} units in stock')
-                    print(f'{quantity} units of {self.name} costs {cost} there are only {self.quantity} units in stock')
-                    return 0.0
-        else:
+        """Buy the given quantity and return the total price as float.
+
+        Raises IsNotAvailable if the product is inactive and
+        IsLowOnStock if there is not enough stock.
+        """
+        if not self.is_active():
             raise IsNotAvailable(f'{self.name} it is currently unavailable')
-            print(f'#### testi test #### {self.get_name} it is currently unavailable')
-            return 0.0
-
-
-
-
+        if self.is_quantity_valid(quantity):
+            quantity = int(round(quantity))
+            cost = quantity * self.get_price()
+            if self.reduce_quantity(quantity):
+                return cost
+            else:
+                raise IsLowOnStock(f'{quantity} units of {self.name} costs {cost} there are only {self.quantity} units in stock')
 
 def main():
     bose = Product("Bose QuietComfort Earbuds", price=250, quantity=500)
@@ -191,23 +214,5 @@ def main():
     bose.set_quantity(1000)
     bose.show()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
     main()
-
-
-

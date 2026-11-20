@@ -13,14 +13,12 @@ class Store:
                 self.products.append(item)
 
     def remove_product(self, product):
-        """Remove a product by Product, Product Name or Iterator in the Group from the Product list"""
+        """Remove a product by Product Name or index, return True or False"""
         if isinstance(product, str):
             found = next((item for item in self.products if item.name == product), None)
-            if found is not None:
-                try:
-                    self.products.remove(found)
-                except ValueError:
-                    return False
+            if found is None:
+                return False
+            self.products.remove(found)
             return True
 
         elif isinstance(product, Product):
@@ -33,7 +31,7 @@ class Store:
         elif isinstance(product, int):
             try:
                 del self.products[product]
-            except ValueError:
+            except IndexError:
                 return False
             return True
         return False
